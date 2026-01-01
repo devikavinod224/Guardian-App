@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "79599383998",
+    "firebase_url": "https://guardian-127ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "guardian-127ca",
+    "storage_bucket": "guardian-127ca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:79599383998:android:224bab0075c775b049f5ef",
+        "android_client_info": {
+          "package_name": "com.anand.guardian"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "79599383998-qm6q0s7h27eucn46s5o122ut64bjlm99.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5LohAZNjb1QgyZ-Bk5XQEalCIoypi_jQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "79599383998-qm6q0s7h27eucn46s5o122ut64bjlm99.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

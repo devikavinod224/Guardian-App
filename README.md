@@ -64,7 +64,7 @@ This project uses a robust integration of Flutter and Native Android code to ach
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/guardian.git
+    git clone https://github.com/devikavinod224/Guardian-App.git
     ```
 2.  **Firebase Configuration**
     -   Create a Firebase project.

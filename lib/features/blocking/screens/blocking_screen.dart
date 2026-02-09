@@ -29,24 +29,41 @@ class _BlockingScreenState extends State<BlockingScreen> {
     final pkg = prefs.getString('current_blocked_app');
     final reason = prefs.getString('blocking_reason');
 
-    // Fetch Child Name
     String? name;
+    String? appDisplayName;
     final user = FirebaseAuth.instance.currentUser;
     final childId = prefs.getString('child_id');
+
     if (user != null && childId != null) {
-      final doc = await FirebaseFirestore.instance
+      final childDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('children')
           .doc(childId)
           .get();
-      name = doc.data()?['name'];
+      name = childDoc.data()?['name'];
+
+      if (pkg != null) {
+        final appDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('children')
+            .doc(childId)
+            .collection('apps')
+            .doc(pkg)
+            .get();
+        appDisplayName = appDoc.data()?['name'];
+      }
     }
 
     setState(() {
       _blockedPackage = pkg;
       _childName = name;
       _blockingReason = reason;
+      // We can use appDisplayName in the UI
+      if (appDisplayName != null) {
+        _blockedPackage = appDisplayName; // Override for display
+      }
     });
   }
 
@@ -81,6 +98,10 @@ class _BlockingScreenState extends State<BlockingScreen> {
         final user = FirebaseAuth.instance.currentUser;
 
         if (user != null && childId != null) {
+          // Use original package name for packageName, and display name for appName
+          final prefs2 = await SharedPreferences.getInstance();
+          final originalPkg = prefs2.getString('current_blocked_app');
+
           await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
@@ -88,8 +109,8 @@ class _BlockingScreenState extends State<BlockingScreen> {
               .doc(childId)
               .collection('requests')
               .add({
-                'packageName': _blockedPackage,
-                'appName': _blockedPackage,
+                'packageName': originalPkg,
+                'appName': _blockedPackage, // This has the display name now
                 'parentId': user.uid,
                 'childName': _childName ?? 'Unknown',
                 'childId': childId,

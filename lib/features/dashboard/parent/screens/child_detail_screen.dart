@@ -874,20 +874,73 @@ class ChildDetailScreen extends StatelessWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: usage.length,
                 itemBuilder: (ctx, index) {
-                  final key = usage.keys.elementAt(index);
-                  final milliseconds = usage[key] as int;
+                  final pkg = usage.keys.elementAt(index);
+                  final milliseconds = usage[pkg] as int;
                   final minutes = (milliseconds / 1000 / 60).round();
 
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      key.split('.').last,
-                    ), // Simple package name formatting
-                    subtitle: Text(key, style: const TextStyle(fontSize: 10)),
-                    trailing: Text(
-                      '$minutes min',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(parentUid)
+                        .collection('children')
+                        .doc(childId)
+                        .collection('apps')
+                        .doc(pkg)
+                        .get(),
+                    builder: (context, snapshot) {
+                      final appData =
+                          snapshot.data?.data() as Map<String, dynamic>?;
+                      final name = appData?['name'] ?? pkg.split('.').last;
+                      final iconBase64 = appData?['icon'] as String?;
+
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blueAccent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: iconBase64 != null
+                              ? Image.memory(
+                                  base64Decode(iconBase64),
+                                  width: 24,
+                                  height: 24,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.android,
+                                    color: Colors.blueAccent,
+                                    size: 20,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.android,
+                                  color: Colors.blueAccent,
+                                  size: 20,
+                                ),
+                        ),
+                        title: Text(
+                          name,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        subtitle: Text(
+                          pkg,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        trailing: Text(
+                          '$minutes min',
+                          style: GoogleFonts.robotoMono(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.indigo,
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               )

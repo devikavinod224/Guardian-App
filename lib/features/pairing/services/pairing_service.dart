@@ -61,7 +61,7 @@ class PairingService with ChangeNotifier {
       // Also create/update a 'children' subcollection/document under the parent
       // This part depends on how we structure the DB.
       // For now, let's assume we link the child device ID to the parent in a 'children' collection
-      final parentUid = data['parent_uid'];
+      final parentUid = data['parent_uid'] as String;
 
       final childRef = _firestore
           .collection('users')

@@ -617,42 +617,43 @@ class ChildDetailScreen extends StatelessWidget {
                               child: Stack(
                                 alignment: Alignment.topRight,
                                 children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: isBlocked
-                                        ? Colors.white
-                                        : Colors.grey.shade50,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: isBlocked
-                                      ? ColorFiltered(
-                                          colorFilter: const ColorFilter.mode(
-                                            Colors.grey,
-                                            BlendMode.saturation,
-                                          ),
-                                          child: _getAppIcon(pkg, iconBase64),
-                                        )
-                                      : _getAppIcon(pkg, iconBase64),
-                                ),
-                                if (limitMins != null)
                                   Container(
-                                    padding: const EdgeInsets.all(4),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Colors.amber,
+                                      color: isBlocked
+                                          ? Colors.white
+                                          : Colors.grey.shade50,
                                       shape: BoxShape.circle,
-                                      border: Border.all(
+                                    ),
+                                    child: isBlocked
+                                        ? ColorFiltered(
+                                            colorFilter: const ColorFilter.mode(
+                                              Colors.grey,
+                                              BlendMode.saturation,
+                                            ),
+                                            child: _getAppIcon(pkg, iconBase64),
+                                          )
+                                        : _getAppIcon(pkg, iconBase64),
+                                  ),
+                                  if (limitMins != null)
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.timer,
+                                        size: 12,
                                         color: Colors.white,
-                                        width: 2,
                                       ),
                                     ),
-                                    child: const Icon(
-                                      Icons.timer,
-                                      size: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Padding(
@@ -1303,12 +1304,10 @@ class ChildDetailScreen extends StatelessWidget {
                       'blocked_apps': FieldValue.arrayUnion([pkg]),
                       'app_limits.$pkg': FieldValue.delete(),
                     });
-                    
-                    if (mounted) {
-                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Blocked $appName")),
-                      );
-                    }
+
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("Blocked $appName")));
                   },
                 ),
                 const Divider(),
@@ -1395,21 +1394,17 @@ class ChildDetailScreen extends StatelessWidget {
                         'blocked_apps': FieldValue.arrayRemove([pkg]),
                       });
                     } else {
-                       ref.update({
-                        'app_limits.$pkg': FieldValue.delete(),
-                      });
+                      ref.update({'app_limits.$pkg': FieldValue.delete()});
                     }
 
                     Navigator.pop(ctx);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            "Limit set to ${selectedHours}h ${selectedMinutes}m for $appName",
-                          ),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          "Limit set to ${selectedHours}h ${selectedMinutes}m for $appName",
                         ),
-                      );
-                    }
+                      ),
+                    );
                   },
                   child: const Text("Save Limit"),
                 ),

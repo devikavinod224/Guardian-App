@@ -260,67 +260,64 @@ class _DemoParentDashboardScreenState extends State<DemoParentDashboardScreen> {
           ),
 
           // Floating Debug Menu for Presentation Control
-          Positioned(
-            bottom: 80,
-            right: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'demo_debug',
-              backgroundColor: Colors.grey[800],
-              child: const Icon(Icons.build, color: Colors.white),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (ctx) => Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Presentation Controls",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ListTile(
-                          leading: const Icon(Icons.sos, color: Colors.red),
-                          title: const Text("Trigger SOS (Sarah)"),
-                          onTap: () {
-                            setState(() {
-                              // Toggle SOS for Sarah (Index 1)
-                              var sarah = _children.firstWhere(
-                                (c) => c['name'] == 'Sarah',
-                              );
-                              sarah['is_sos'] = !(sarah['is_sos'] ?? false);
-                            });
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(
-                            Icons.qr_code_scanner,
-                            color: Colors.blue,
-                          ),
-                          title: const Text("Simulate Add Device"),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _simulateAddDevice();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
         ],
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          FloatingActionButton.small(
+            heroTag: 'demo_debug',
+            backgroundColor: Colors.grey[800],
+            child: const Icon(Icons.build, color: Colors.white),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (ctx) => Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Presentation Controls",
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        leading: const Icon(Icons.sos, color: Colors.red),
+                        title: const Text("Trigger SOS (Sarah)"),
+                        onTap: () {
+                          setState(() {
+                            // Toggle SOS for Sarah (Index 1)
+                            var sarah = _children.firstWhere(
+                              (c) => c['name'] == 'Sarah',
+                            );
+                            sarah['is_sos'] = !(sarah['is_sos'] ?? false);
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.qr_code_scanner,
+                          color: Colors.blue,
+                        ),
+                        title: const Text("Simulate Add Device"),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _simulateAddDevice();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
           FloatingActionButton(
             heroTag: 'settings',
             onPressed: () {
@@ -333,7 +330,7 @@ class _DemoParentDashboardScreenState extends State<DemoParentDashboardScreen> {
             foregroundColor: Colors.indigo,
             child: const Icon(Icons.settings),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           FloatingActionButton.extended(
             heroTag: 'add_device',
             onPressed: _simulateAddDevice,

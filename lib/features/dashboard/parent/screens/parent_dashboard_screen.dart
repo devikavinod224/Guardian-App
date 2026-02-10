@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../features/pairing/screens/pairing_code_screen.dart';
 import '../../../../features/auth/services/auth_service.dart';
+import '../../../../features/settings/screens/settings_screen.dart';
 import '../../../../features/pairing/services/pairing_service.dart';
 import 'child_detail_screen.dart';
 import '../../../auth/screens/role_selection_screen.dart';
@@ -78,7 +79,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Colors.red.withOpacity(0.1),
+                            backgroundColor: Colors.red.withValues(alpha: 0.1),
                             child: const Icon(
                               Icons.lock_clock,
                               color: Colors.red,
@@ -259,15 +260,43 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
     // 2. Grant Access
     if (duration == -1) {
+      // Unblock for today (remove limit and block)
       await childRef.update({
         'blocked_apps': FieldValue.arrayRemove([pkg]),
         'app_limits.$pkg': FieldValue.delete(),
       });
     } else {
+      // Add time to current usage
+      final childDoc = await childRef.get();
+      final childData = childDoc.data() as Map<String, dynamic>?;
+      int currentUsageMins = 0;
+
+      if (childData != null && childData['app_usage'] != null) {
+        final usageMap = childData['app_usage'] as Map<String, dynamic>;
+        final usageMillis = usageMap[pkg] as int? ?? 0;
+        currentUsageMins = (usageMillis / 1000 / 60).ceil();
+      }
+
+      // If they are already blocked, they likely used X mins.
+      // We want to give them X + requested mins.
+      // If they haven't used it (just blocked explicitly), currentUsage is low, so limit = duration.
+      // This covers both cases.
+      final newLimit = currentUsageMins + duration;
+
       await childRef.update({
         'blocked_apps': FieldValue.arrayRemove([pkg]),
-        'app_limits.$pkg': duration,
+        'app_limits.$pkg': newLimit,
       });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Granted $duration mins (Total limit: $newLimit mins)',
+            ),
+          ),
+        );
+      }
     }
 
     if (context.mounted) Navigator.pop(context);
@@ -340,16 +369,43 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.child_care, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No devices linked yet.',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.indigo.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.devices_other_rounded,
+                        size: 64,
+                        color: Colors.indigo.shade300,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'No Devices Linked',
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Link a child device to start monitoring activity and location.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -387,114 +443,164 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     final name = data['name'] ?? 'Unknown Child';
                     final isSafe = data['is_safe'] as bool? ?? true;
 
-                    return Card(
-                      elevation: 8,
-                      shadowColor: isSafe
-                          ? Colors.blueAccent.withOpacity(0.3)
-                          : Colors.redAccent.withOpacity(0.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSafe
-                              ? Theme.of(context).primaryColor.withOpacity(0.1)
-                              : Colors.redAccent,
-                          width: isSafe ? 1 : 2,
-                        ),
-                      ),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: isSafe
-                              ? Colors.blueAccent.withOpacity(0.1)
-                              : Colors.redAccent.withOpacity(0.1),
-                          child: Icon(
-                            isSafe
-                                ? Icons.rocket_launch_rounded
-                                : Icons.warning_rounded,
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChildDetailScreen(
+                              childId: doc.id,
+                              childName: name,
+                              parentUid: context
+                                  .read<AuthService>()
+                                  .currentUser!
+                                  .uid,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isSafe
+                                  ? Colors.blue.withValues(alpha: 0.1)
+                                  : Colors.red.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: Border.all(
                             color: isSafe
-                                ? Colors.blueAccent
-                                : Colors.redAccent,
+                                ? Colors.blue.withValues(alpha: 0.1)
+                                : Colors.red.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                        title: Text(
-                          name,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: isSafe ? null : Colors.red,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                _buildStatusIndicator(data['last_active']),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Last active: ${_formatTimestamp(data['last_active'])}',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSafe
+                                        ? Colors.blue.withValues(alpha: 0.2)
+                                        : Colors.red.withValues(alpha: 0.2),
+                                    width: 2,
                                   ),
                                 ),
-                              ],
-                            ),
-                            if (!isSafe)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Row(
+                                child: CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor: isSafe
+                                      ? Colors.blue.shade50
+                                      : Colors.red.shade50,
+                                  child: Icon(
+                                    isSafe
+                                        ? Icons.rocket_launch_rounded
+                                        : Icons.warning_rounded,
+                                    color: isSafe
+                                        ? Colors.blueAccent
+                                        : Colors.redAccent,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(
-                                      Icons.location_off,
-                                      size: 12,
-                                      color: Colors.red,
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            name,
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              color: Colors.black87,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (!isSafe) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Text(
+                                              "ALERT",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      "OUT OF SAFE ZONE",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.red,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        _buildStatusIndicator(
+                                          data['last_active'],
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _formatTimestamp(data['last_active']),
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (!isSafe)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          "Location: Out of Safe Zone",
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.red.shade700,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
-                          ],
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 16,
-                            color: Colors.blueAccent,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChildDetailScreen(
-                                childId: doc.id,
-                                childName: name,
-                                parentUid: context
-                                    .read<AuthService>()
-                                    .currentUser!
-                                    .uid,
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.grey,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ).animate(delay: (100 * index).ms).fade().slideX();
+                            ],
+                          ),
+                        ),
+                      ).animate(delay: (100 * index).ms).fade().slideX(),
+                    );
                   },
                 ),
               ),
@@ -502,15 +608,35 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PairingCodeScreen()),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Device'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.indigo,
+            child: const Icon(Icons.settings),
+          ),
+          const SizedBox(height: 20),
+          FloatingActionButton.extended(
+            heroTag: 'add_device',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PairingCodeScreen()),
+              );
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Add Device'),
+          ),
+        ],
       ),
     );
   }
@@ -542,7 +668,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6A1B9A).withOpacity(0.4),
+            color: const Color(0xFF6A1B9A).withValues(alpha: 0.4),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -561,13 +687,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   .animate(onPlay: (c) => c.repeat())
                   .shimmer(
                     duration: 2000.ms,
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                   ),
               const SizedBox(width: 12),
               Text(
                 'Highest Activity',
                 style: GoogleFonts.poppins(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 1,
@@ -588,7 +714,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   ),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   radius: 28,
                   child: Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
@@ -658,7 +784,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         boxShadow: isOnline
             ? [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.5),
+                  color: Colors.green.withValues(alpha: 0.5),
                   blurRadius: 4,
                   spreadRadius: 2,
                 ),

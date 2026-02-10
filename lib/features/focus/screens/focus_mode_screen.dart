@@ -228,7 +228,7 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
                         child: CircularProgressIndicator(
                           value: _remainingSeconds / (_targetMinutes * 60),
                           strokeWidth: 20,
-                          backgroundColor: Colors.indigo.withOpacity(0.1),
+                          backgroundColor: Colors.indigo.withValues(alpha: 0.1),
                           color: Colors.indigo,
                         ),
                       ),
@@ -245,7 +245,7 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
                   .animate(onPlay: (c) => c.repeat())
                   .shimmer(
                     duration: 2000.ms,
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white.withValues(alpha: 0.5),
                   ),
               const SizedBox(height: 40),
               const Text(

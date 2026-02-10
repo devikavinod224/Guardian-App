@@ -621,43 +621,140 @@ class _DemoChildDetailScreenState extends State<DemoChildDetailScreen>
   }
 
   void _showDemoLimitDialog(String pkg, List<String> blocked) {
+    int selectedHours = 1;
+    int selectedMinutes = 0;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Manage $pkg"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.block, color: Colors.red),
-              title: const Text("Block App"),
-              onTap: () {
-                setState(() {
-                  blocked.add(pkg);
-                  _data['blocked_apps'] = blocked;
-                });
-                Navigator.pop(ctx);
-                _simulateRequest(pkg, _data['name']);
-              },
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text("Manage ${_getAppName(pkg)}"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.block, color: Colors.red),
+                  title: const Text("Block App Needed"),
+                  onTap: () {
+                    setState(() {
+                      blocked.add(pkg);
+                      _data['blocked_apps'] = blocked;
+                    });
+                    Navigator.pop(ctx);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Demo: Blocked ${_getAppName(pkg)}"),
+                        ),
+                      );
+                      _simulateRequest(pkg, _data['name']);
+                    }
+                  },
+                ),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  "Set Daily Limit",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Hours Picker
+                    Column(
+                      children: [
+                        Text("Hours", style: GoogleFonts.poppins(fontSize: 12)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButton<int>(
+                            value: selectedHours,
+                            underline: const SizedBox(),
+                            items: List.generate(12, (index) => index).map((h) {
+                              return DropdownMenuItem(
+                                value: h,
+                                child: Text("$h"),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              setDialogState(() => selectedHours = val!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    // Minutes Picker
+                    Column(
+                      children: [
+                        Text(
+                          "Minutes",
+                          style: GoogleFonts.poppins(fontSize: 12),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButton<int>(
+                            value: selectedMinutes,
+                            underline: const SizedBox(),
+                            items: [0, 15, 30, 45].map((m) {
+                              return DropdownMenuItem(
+                                value: m,
+                                child: Text("$m".padLeft(2, '0')),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              setDialogState(() => selectedMinutes = val!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    // Save mock limit
+                    setState(() {
+                      if (_data['app_limits'] == null) {
+                        _data['app_limits'] = <String, dynamic>{};
+                      }
+                      final totalMins = (selectedHours * 60) + selectedMinutes;
+                      if (totalMins > 0) {
+                        _data['app_limits'][pkg] = totalMins;
+                      } else {
+                        _data['app_limits'].remove(pkg);
+                      }
+                    });
+                    Navigator.pop(ctx);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Demo: Limit set to ${selectedHours}h ${selectedMinutes}m",
+                          ),
+                        ),
+                      );
+                      if ((selectedHours * 60 + selectedMinutes) > 0) {
+                        _simulateRequest(pkg, _data['name'], type: 'time');
+                      }
+                    }
+                  },
+                  child: const Text("Save Limit"),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.timer, color: Colors.blue),
-              title: const Text("Set Daily Limit"),
-              onTap: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Demo: Limit set to 1 hour")),
-                );
-                // Also simulate request for "More Time" if limit is hit
-                Future.delayed(const Duration(seconds: 3), () {
-                  if (mounted) {
-                    _simulateRequest(pkg, _data['name'], type: 'time');
-                  }
-                });
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

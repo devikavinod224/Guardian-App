@@ -74,6 +74,11 @@ This project uses a robust integration of Flutter and Native Android code to ach
     flutter pub get
     flutter run
     ```
+3.  **Build the App**
+    ```bash
+    flutter pub get
+    flutter build apk
+    ```
 
 ## 📝 Required Permissions
 Guardian requires the following sensitive permissions to function effectively:

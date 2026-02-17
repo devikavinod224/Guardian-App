@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'parent_login_screen.dart';
 import 'child_login_screen.dart';
 import '../../demo/screens/demo_parent_dashboard_screen.dart';
+import '../../shared/widgets/animated_background.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -10,17 +12,8 @@ class RoleSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-            ],
-          ),
-        ),
+      extendBodyBehindAppBar: true,
+      body: AnimatedBackground(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -28,52 +21,72 @@ class RoleSelectionScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(),
-                Text(
-                  'Welcome to\nGuardian',
-                  style: GoogleFonts.poppins(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                    height: 1.2,
+                RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.poppins(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                      color: const Color(0xFF2D3142),
+                    ),
+                    children: [
+                      const TextSpan(text: 'Welcome to\n'),
+                      TextSpan(
+                        text: 'Guardian',
+                        style: TextStyle(color: const Color(0xFF2575FC)),
+                      ),
+                    ],
                   ),
-                ),
+                ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3, end: 0),
                 const SizedBox(height: 16),
                 Text(
-                  'Choose your role to get started',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                ),
+                      'Choose your role to get started',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[600], // Grey text
+                        fontSize: 18,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 600.ms)
+                    .slideY(begin: 0.3, end: 0),
                 const Spacer(),
                 _RoleCard(
-                  title: 'Parent',
-                  description: 'Monitor and manage child activity',
-                  icon: Icons.admin_panel_settings_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ParentLoginScreen(),
-                      ),
-                    );
-                  },
-                ),
+                      title: 'Parent',
+                      description: 'Monitor and manage child activity',
+                      icon: Icons.admin_panel_settings_rounded,
+                      color: Colors.white,
+                      textColor: const Color(0xFF6A11CB),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ParentLoginScreen(),
+                          ),
+                        );
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 600.ms)
+                    .slideX(begin: -0.2, end: 0),
                 const SizedBox(height: 24),
                 _RoleCard(
-                  title: 'Child',
-                  description: 'Join family and share stats',
-                  icon: Icons.child_care_rounded,
-                  color: Theme.of(context).colorScheme.secondary,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ChildLoginScreen(),
-                      ),
-                    );
-                  },
-                ),
+                      title: 'Child',
+                      description: 'Join family and share stats',
+                      icon: Icons.child_care_rounded,
+                      color: Colors.white,
+                      textColor: const Color(0xFF2575FC),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChildLoginScreen(),
+                          ),
+                        );
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 600.ms, duration: 600.ms)
+                    .slideX(begin: 0.2, end: 0),
                 const Spacer(),
                 Center(
                   child: TextButton.icon(
@@ -85,16 +98,16 @@ class RoleSelectionScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.slideshow_rounded,
-                      color: Colors.grey,
+                      color: Colors.grey[600],
                     ),
-                    label: const Text(
+                    label: Text(
                       "Try Demo Simulation",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.grey[600]),
                     ),
                   ),
-                ),
+                ).animate().fadeIn(delay: 800.ms),
                 const SizedBox(height: 20),
               ],
             ),
@@ -110,6 +123,7 @@ class _RoleCard extends StatelessWidget {
   final String description;
   final IconData icon;
   final Color color;
+  final Color textColor;
   final VoidCallback onTap;
 
   const _RoleCard({
@@ -117,6 +131,7 @@ class _RoleCard extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.color,
+    required this.textColor,
     required this.onTap,
   });
 
@@ -130,26 +145,25 @@ class _RoleCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.15),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
             ],
-            border: Border.all(color: Colors.white, width: 2),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: textColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 32),
+                child: Icon(icon, color: textColor, size: 32),
               ),
               const SizedBox(width: 20),
               Expanded(

@@ -44,8 +44,8 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
       // Call service
       final pUid = await pairingService.pairDevice(
         code,
-        deviceId,
         name,
+        deviceId,
       ); // returns parentUid
 
       // Save Local

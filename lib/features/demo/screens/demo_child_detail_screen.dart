@@ -256,14 +256,22 @@ class _DemoChildDetailScreenState extends State<DemoChildDetailScreen>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.indigo.withValues(alpha: 0.1),
+                  color: mins >= 120
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : mins >= 60
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.amber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   "$mins min",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade700,
+                    color: mins >= 120
+                        ? Colors.red.shade700
+                        : mins >= 60
+                        ? Colors.green.shade700
+                        : Colors.amber.shade700,
                   ),
                 ),
               ),

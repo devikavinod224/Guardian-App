@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../features/auth/services/auth_service.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:installed_apps/installed_apps.dart';
 import '../../../../features/focus/screens/focus_mode_screen.dart';
 import '../services/child_monitoring_service.dart';
 
@@ -21,6 +23,70 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
   void initState() {
     super.initState();
     ChildMonitoringService().initialize();
+    _syncAppsEagerly();
+  }
+
+  Future<void> _syncAppsEagerly() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final childId = prefs.getString('child_id');
+      final parentUid = prefs.getString('parent_uid');
+
+      if (childId == null || parentUid == null) return;
+
+      final appsWithIcons = await InstalledApps.getInstalledApps(
+        withIcon: true,
+        excludeSystemApps: true,
+      );
+
+      final deviceRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(parentUid)
+          .collection('children')
+          .doc(childId);
+
+      final appsCollection = deviceRef.collection('apps');
+
+      int count = 0;
+      WriteBatch batch = FirebaseFirestore.instance.batch();
+
+      for (var app in appsWithIcons) {
+        final docRef = appsCollection.doc(app.packageName);
+        final data = {
+          'name': app.name,
+          'packageName': app.packageName,
+          'version': app.versionName,
+          'last_synced': FieldValue.serverTimestamp(),
+        };
+
+        if (app.icon != null) {
+          data['icon'] = base64Encode(app.icon!);
+        }
+
+        batch.set(docRef, data, SetOptions(merge: true));
+        count++;
+
+        if (count % 20 == 0) {
+          await batch.commit();
+          batch = FirebaseFirestore.instance.batch();
+        }
+      }
+
+      if (count % 20 != 0) {
+        await batch.commit();
+      }
+
+      // Update fingerprint
+      appsWithIcons.sort((a, b) => a.packageName.compareTo(b.packageName));
+      final currentFingerprint = appsWithIcons
+          .map((e) => e.packageName)
+          .join(',');
+      await prefs.setString('apps_fingerprint', currentFingerprint);
+
+      debugPrint("Eager app sync completed!");
+    } catch (e) {
+      debugPrint("Eager app sync error: $e");
+    }
   }
 
   @override
@@ -194,7 +260,7 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
             'type': 'SOS',
             'timestamp': FieldValue.serverTimestamp(),
             'parentId': parentUid, // For CollectionGroup query
-            'message': 'Emergency SOS triggered by child!',
+            'message': 'Child is in danger!',
             if (location != null) 'location': location,
           });
 
@@ -204,7 +270,7 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
           builder: (_) => AlertDialog(
             title: const Text("SOS Sent!"),
             content: const Text(
-              "Parents have been notified with your location.",
+              "Parents have been notified that you are in danger.",
             ),
             backgroundColor: Colors.red.shade50,
             icon: const Icon(Icons.notifications_active, color: Colors.red),

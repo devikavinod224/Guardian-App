@@ -276,6 +276,55 @@ void onStart(ServiceInstance service) async {
             debugPrint(
               "BLOCKING: $currentApp reached limit ($usedMins / $limitMins mins)!",
             );
+
+            // Only alert if we haven't already alerted for this app during this block session
+            final lastAlertedApp = prefs.getString('last_time_alert_app');
+            if (lastAlertedApp != currentApp) {
+              await prefs.setString('last_time_alert_app', currentApp);
+
+              // Trigger Local Notification for the child
+              final FlutterLocalNotificationsPlugin
+              flutterLocalNotificationsPlugin =
+                  FlutterLocalNotificationsPlugin();
+
+              const AndroidNotificationDetails androidPlatformChannelSpecifics =
+                  AndroidNotificationDetails(
+                    'guardian_alerts',
+                    'Guardian Alerts',
+                    importance: Importance.max,
+                    priority: Priority.high,
+                  );
+              const NotificationDetails platformChannelSpecifics =
+                  NotificationDetails(android: androidPlatformChannelSpecifics);
+
+              await flutterLocalNotificationsPlugin.show(
+                0,
+                'Time Limit Exceeded',
+                'You have reached your time limit for this app.',
+                platformChannelSpecifics,
+              );
+
+              // Send alert to parent
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                final childId = prefs.getString('child_id');
+                if (childId != null) {
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('children')
+                      .doc(childId)
+                      .collection('alerts')
+                      .add({
+                        'type': 'TimeExceeded',
+                        'timestamp': FieldValue.serverTimestamp(),
+                        'parentId': user.uid,
+                        'message': 'Time limit exceeded for an app.',
+                        'app': currentApp,
+                      });
+                }
+              }
+            }
           }
         }
 
@@ -401,10 +450,10 @@ Future<void> _performMonitoring(ServiceInstance service) async {
           withIcon: true,
           excludeSystemApps: true,
         );
-        final batch = FirebaseFirestore.instance.batch();
-        final appsCollection = deviceRef.collection('apps');
+        // 1. Sync current apps in chunks of 20 to prevent GRPC size limits
+        int count = 0;
+        WriteBatch batch = FirebaseFirestore.instance.batch();
 
-        // 1. Sync current apps
         for (var app in appsWithIcons) {
           final docRef = appsCollection.doc(app.packageName);
           final data = {
@@ -414,25 +463,35 @@ Future<void> _performMonitoring(ServiceInstance service) async {
             'last_synced': FieldValue.serverTimestamp(),
           };
 
-          // Only update icon if it's new (to save bandwidth, though local check is basic)
-          // Actually, always sending icon is safer for now to ensure it exists.
           if (app.icon != null) {
             data['icon'] = base64Encode(app.icon!);
           }
 
-          // Use merge: true to avoid overwriting existing rules (blocked status, etc.)
           batch.set(docRef, data, SetOptions(merge: true));
-        }
+          count++;
 
-        // 2. Remove uninstalled apps from Firestore
-        final existingDocs = await appsCollection.get();
-        for (var doc in existingDocs.docs) {
-          if (!appsWithIcons.any((a) => a.packageName == doc.id)) {
-            batch.delete(doc.reference);
+          if (count % 20 == 0) {
+            await batch.commit();
+            batch = FirebaseFirestore.instance.batch();
           }
         }
 
-        await batch.commit();
+        if (count % 20 != 0) {
+          await batch.commit();
+        }
+
+        // 2. Remove uninstalled apps from Firestore
+        final deleteBatch = FirebaseFirestore.instance.batch();
+        final existingDocs = await appsCollection.get();
+        int deleteCount = 0;
+        for (var doc in existingDocs.docs) {
+          if (!appsWithIcons.any((a) => a.packageName == doc.id)) {
+            deleteBatch.delete(doc.reference);
+            deleteCount++;
+          }
+        }
+        if (deleteCount > 0) await deleteBatch.commit();
+
         await prefs.setString('apps_fingerprint', currentFingerprint);
         debugPrint("Guardian: App sync complete.");
       }
@@ -488,13 +547,25 @@ Future<void> _performMonitoring(ServiceInstance service) async {
           // We explicitly update this field.
           final bool isSafe = distance <= radius;
 
-          // Only update if changed to avoid write spam?
-          // For now, simple update is fine as we are already writing updateData.
-          // However, updateData was already committed above. We should add this to updateData BEFORE commit.
-
-          // RETROACTIVE FIX: Since we already called deviceRef.update(updateData) above at Step 4,
-          // we need to do another update here or move this logic up.
-          // To be cleaner, I'll do a separate update for safety status if it changed or just update it now.
+          // Check if status changed from safe to unsafe to trigger alert
+          final bool wasSafe = prefs.getBool('was_safe_zone') ?? true;
+          if (wasSafe && !isSafe) {
+            FirebaseFirestore.instance
+                .collection('users')
+                .doc(parentUid)
+                .collection('children')
+                .doc(deviceId)
+                .collection('alerts')
+                .add({
+                  'type': 'SafeZone',
+                  'timestamp': FieldValue.serverTimestamp(),
+                  'parentId': parentUid,
+                  'message': 'Child has left the Safe Zone!',
+                  'location': GeoPoint(position.latitude, position.longitude),
+                });
+            debugPrint("ALERT: Child left safe zone!");
+          }
+          await prefs.setBool('was_safe_zone', isSafe);
 
           await deviceRef.update({'is_safe': isSafe});
         } catch (e) {

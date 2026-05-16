@@ -75,8 +75,8 @@ class _GuardianAppState extends State<GuardianApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(create: (_) => AuthService()),
-        Provider<PairingService>(create: (_) => PairingService()),
+        ChangeNotifierProvider<AuthService>(create: (_) => AuthService()),
+        ChangeNotifierProvider<PairingService>(create: (_) => PairingService()),
       ],
       child: MaterialApp(
         title: 'Guardian',

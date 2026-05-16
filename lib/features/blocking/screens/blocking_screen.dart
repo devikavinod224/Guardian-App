@@ -162,7 +162,7 @@ class _BlockingScreenState extends State<BlockingScreen> {
                 ? [Colors.indigo.shade900, Colors.black]
                 : isDriving
                 ? [Colors.orange.shade900, Colors.black]
-                : [Colors.red.withOpacity(0.2), Colors.black],
+                : [Colors.red.withValues(alpha: 0.2), Colors.black],
           ),
         ),
         child: SafeArea(
@@ -195,7 +195,7 @@ class _BlockingScreenState extends State<BlockingScreen> {
                       duration: 1000.ms,
                     )
                     .shimmer(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       duration: 2000.ms,
                     ),
                 const SizedBox(height: 32),
@@ -251,10 +251,10 @@ class _BlockingScreenState extends State<BlockingScreen> {
                     ),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.redAccent.withOpacity(0.5),
+                        color: Colors.redAccent.withValues(alpha: 0.5),
                       ),
                       borderRadius: BorderRadius.circular(30),
-                      color: Colors.redAccent.withOpacity(0.1),
+                      color: Colors.redAccent.withValues(alpha: 0.1),
                     ),
                     child: Text(
                       'Time\'s Up!',

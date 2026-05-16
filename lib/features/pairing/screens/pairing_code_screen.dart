@@ -81,6 +81,7 @@ class _PairingCodeScreenState extends State<PairingCodeScreen>
 
   void _shareCode() {
     if (_code == null) return;
+    // ignore: deprecated_member_use
     Share.share(
       'Use this code to connect your device to Guardian: $_code',
       subject: 'Guardian Pairing Code',
@@ -167,120 +168,124 @@ class _PairingCodeScreenState extends State<PairingCodeScreen>
                   opacity: _fadeAnimation,
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        Text(
-                          'Pairing Code',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: Colors.white70,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 24,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          Text(
+                            'Pairing Code',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.white70,
+                              letterSpacing: 1.2,
                             ),
                           ),
-                          child: Column(
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 24,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                QrImageView(
+                                  data: _code!,
+                                  version: QrVersions.auto,
+                                  size: 180,
+                                  gapless: false,
+                                  eyeStyle: const QrEyeStyle(
+                                    eyeShape: QrEyeShape.square,
+                                    color: Colors.white,
+                                  ),
+                                  dataModuleStyle: const QrDataModuleStyle(
+                                    dataModuleShape: QrDataModuleShape.square,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _code!,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              QrImageView(
-                                data: _code!,
-                                version: QrVersions.auto,
-                                size: 180,
-                                gapless: false,
-                                eyeStyle: const QrEyeStyle(
-                                  eyeShape: QrEyeShape.square,
-                                  color: Colors.white,
-                                ),
-                                dataModuleStyle: const QrDataModuleStyle(
-                                  dataModuleShape: QrDataModuleShape.square,
-                                  color: Colors.white,
-                                ),
+                              _ActionButton(
+                                icon: Icons.copy_rounded,
+                                label: 'Copy Code',
+                                onTap: _copyToClipboard,
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _code!,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 8,
-                                ),
+                              const SizedBox(width: 24),
+                              _ActionButton(
+                                icon: Icons.share_rounded,
+                                label: 'Share',
+                                onTap: _shareCode,
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _ActionButton(
-                              icon: Icons.copy_rounded,
-                              label: 'Copy Code',
-                              onTap: _copyToClipboard,
+                          const SizedBox(height: 32),
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 24),
-                            _ActionButton(
-                              icon: Icons.share_rounded,
-                              label: 'Share',
-                              onTap: _shareCode,
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Instructions',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Instructions',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              _InstructionStep(
-                                step: 1,
-                                text:
-                                    'Download Guardian on the child\'s device.',
-                              ),
-                              _InstructionStep(
-                                step: 2,
-                                text: 'Select "Child" role on startup.',
-                              ),
-                              _InstructionStep(
-                                step: 3,
-                                text: 'Enter the 6-digit code shown above.',
-                              ),
-                            ],
+                                const SizedBox(height: 16),
+                                const _InstructionStep(
+                                  step: 1,
+                                  text:
+                                      'Download Guardian on the child\'s device.',
+                                ),
+                                const SizedBox(height: 8),
+                                const _InstructionStep(
+                                  step: 2,
+                                  text: 'Select "Child" role on startup.',
+                                ),
+                                const SizedBox(height: 8),
+                                const _InstructionStep(
+                                  step: 3,
+                                  text: 'Enter the 6-digit code shown above.',
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -311,9 +316,9 @@ class _ActionButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: Icon(icon, color: Colors.white, size: 28),
           ),
@@ -347,7 +352,9 @@ class _InstructionStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Text(

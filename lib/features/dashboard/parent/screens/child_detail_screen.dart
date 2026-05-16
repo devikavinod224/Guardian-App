@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ChildDetailScreen extends StatelessWidget {
   final String childId;
@@ -20,6 +21,107 @@ class ChildDetailScreen extends StatelessWidget {
     required this.childName,
     required this.parentUid,
   });
+
+  Widget _getAppIcon(String pkg, String? iconBase64) {
+    if (iconBase64 != null && iconBase64.isNotEmpty) {
+      return ClipOval(
+        child: Image.memory(
+          base64Decode(iconBase64),
+          width: 32,
+          height: 32,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (c, e, s) => _getFallbackIcon(pkg),
+        ),
+      );
+    }
+    return _getFallbackIcon(pkg);
+  }
+
+  Widget _getFallbackIcon(String pkg) {
+    if (pkg.contains('instagram'))
+      return const FaIcon(
+        FontAwesomeIcons.instagram,
+        color: Colors.purple,
+        size: 32,
+      );
+    if (pkg.contains('whatsapp'))
+      return const FaIcon(
+        FontAwesomeIcons.whatsapp,
+        color: Colors.green,
+        size: 32,
+      );
+    if (pkg.contains('facebook'))
+      return const FaIcon(
+        FontAwesomeIcons.facebook,
+        color: Colors.blue,
+        size: 32,
+      );
+    if (pkg.contains('twitter') || pkg.contains('x'))
+      return const FaIcon(
+        FontAwesomeIcons.xTwitter,
+        color: Colors.black,
+        size: 32,
+      );
+    if (pkg.contains('linkedin'))
+      return const FaIcon(
+        FontAwesomeIcons.linkedin,
+        color: Colors.blueAccent,
+        size: 32,
+      );
+    if (pkg.contains('snapchat'))
+      return const FaIcon(
+        FontAwesomeIcons.snapchat,
+        color: Colors.yellow,
+        size: 32,
+      );
+    if (pkg.contains('youtube'))
+      return const FaIcon(
+        FontAwesomeIcons.youtube,
+        color: Colors.red,
+        size: 32,
+      );
+    if (pkg.contains('tiktok'))
+      return const FaIcon(
+        FontAwesomeIcons.tiktok,
+        color: Colors.black,
+        size: 32,
+      );
+    if (pkg.contains('discord'))
+      return const FaIcon(
+        FontAwesomeIcons.discord,
+        color: Colors.indigo,
+        size: 32,
+      );
+    if (pkg.contains('spotify'))
+      return const FaIcon(
+        FontAwesomeIcons.spotify,
+        color: Colors.green,
+        size: 32,
+      );
+    return const Icon(Icons.android, color: Colors.green, size: 32);
+  }
+
+  String _getAppName(String pkg, String originalName) {
+    if (pkg.contains('instagram')) return "Instagram";
+    if (pkg.contains('whatsapp')) return "WhatsApp";
+    if (pkg.contains('facebook')) return "Facebook";
+    if (pkg.contains('twitter') || pkg.contains('x')) return "Twitter X";
+    if (pkg.contains('linkedin')) return "LinkedIn";
+    if (pkg.contains('snapchat')) return "Snapchat";
+    if (pkg.contains('youtube')) return "YouTube";
+    if (pkg.contains('tiktok')) return "TikTok";
+
+    if (originalName.isNotEmpty && originalName != 'Unknown')
+      return originalName;
+
+    // Fallback
+    final parts = pkg.split('.');
+    if (parts.length > 1) {
+      return parts[1][0].toUpperCase() + parts[1].substring(1);
+    }
+    return pkg;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,26 +179,120 @@ class ChildDetailScreen extends StatelessWidget {
               }
             }
 
-            return TabBarView(
+            return Column(
               children: [
-                // Tab 1: Activity
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildHistoryChart(context), // New Chart
-                    const SizedBox(height: 16),
-                    _buildUsageCard(context, data['app_usage']),
-                  ],
-                ),
-                // Tab 2: Location (Map)
-                childPos == null
-                    ? const Center(child: Text('Location not valid.'))
-                    : Stack(
+                if (data['is_safe'] == false)
+                  Container(
+                        width: double.infinity,
+                        color: Colors.red,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 16,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "OUT OF SAFE ZONE",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .fade(duration: 800.ms),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // Tab 1: Activity
+                      ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          _buildHistoryChart(context), // New Chart
+                          const SizedBox(height: 16),
+                          if (data['bonus_time'] != null &&
+                              (data['bonus_time'] as int) > 0)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.indigo, Colors.blueAccent],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blue.withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.stars_rounded,
+                                      color: Colors.white,
+                                      size: 32,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Bonus Time Earned!",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        "${data['bonus_time']} mins available",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ).animate().shimmer(duration: 2000.ms),
+                          _buildUsageCard(context, data['app_usage']),
+                        ],
+                      ),
+                      // Tab 2: Location (Map)
+                      Stack(
                         children: [
                           FlutterMap(
                             options: MapOptions(
-                              initialCenter: childPos,
-                              initialZoom: 15.0,
+                              initialCenter:
+                                  childPos ??
+                                  safeZoneCenter ??
+                                  const LatLng(20.5937, 78.9629), // Default
+                              initialZoom: childPos != null ? 15.0 : 4.0,
                             ),
                             children: [
                               TileLayer(
@@ -109,7 +305,7 @@ class ChildDetailScreen extends StatelessWidget {
                                   circles: [
                                     CircleMarker(
                                       point: safeZoneCenter,
-                                      color: Colors.blue.withOpacity(0.1),
+                                      color: Colors.blue.withValues(alpha: 0.1),
                                       borderColor: Colors.blue,
                                       borderStrokeWidth: 2,
                                       useRadiusInMeter: true,
@@ -117,92 +313,162 @@ class ChildDetailScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                              MarkerLayer(
-                                markers: [
-                                  Marker(
-                                    point: childPos,
-                                    width: 80,
-                                    height: 80,
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      size: 50,
-                                      color: Colors.redAccent,
+                              if (childPos != null)
+                                MarkerLayer(
+                                  markers: [
+                                    Marker(
+                                      point: childPos,
+                                      width: 80,
+                                      height: 80,
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        size: 50,
+                                        color: Colors.redAccent,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
                             ],
                           ),
+                          if (childPos == null)
+                            Center(
+                              child: Container(
+                                margin: const EdgeInsets.all(32),
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(
+                                      width: 32,
+                                      height: 32,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      "Waiting for location...",
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "Ensure child's device covers internet & GPS.",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           Positioned(
                             bottom: 20,
                             left: 20,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.access_time,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Last Updated: ${data['location']?['timestamp'] != null ? DateFormat('h:mm a').format((data['location']['timestamp'] as Timestamp).toDate()) : 'Unknown'}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                            right: 20, // Full width bottom bar
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                if (childPos != null)
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          blurRadius: 10,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.access_time,
+                                          size: 16,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          data['location']?['timestamp'] != null
+                                              ? DateFormat('h:mm a').format(
+                                                  (data['location']['timestamp']
+                                                          as Timestamp)
+                                                      .toDate(),
+                                                )
+                                              : 'Just now',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 20,
-                            right: 20,
-                            child: FloatingActionButton.extended(
-                              onPressed: () {
-                                FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(parentUid)
-                                    .collection('children')
-                                    .doc(childId)
-                                    .update({
-                                      'safe_zone': {
-                                        'lat': childPos!.latitude,
-                                        'lng': childPos.longitude,
-                                        'radius': 500, // 500 meters
-                                        'timestamp':
-                                            FieldValue.serverTimestamp(),
-                                      },
-                                    });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Safe Zone set to current location (500m) 🛡️',
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.security),
-                              label: const Text('Set Home Zone'),
-                              backgroundColor: Colors.blueAccent,
+                                FloatingActionButton.extended(
+                                  heroTag: 'set_home',
+                                  onPressed: childPos == null
+                                      ? null
+                                      : () {
+                                          FirebaseFirestore.instance
+                                              .collection('users')
+                                              .doc(parentUid)
+                                              .collection('children')
+                                              .doc(childId)
+                                              .update({
+                                                'safe_zone': {
+                                                  'lat': childPos!.latitude,
+                                                  'lng': childPos!.longitude,
+                                                  'radius': 500, // 500 meters
+                                                  'timestamp':
+                                                      FieldValue.serverTimestamp(),
+                                                },
+                                              });
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Safe Zone set to current location (500m) 🛡️',
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                  icon: const Icon(Icons.security),
+                                  label: const Text('Set Home Zone'),
+                                  backgroundColor: childPos == null
+                                      ? Colors.grey
+                                      : Colors.blueAccent,
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                // Tab 3: Controls
-                _buildControlsTab(context, data),
+                      // Tab 3: Controls
+                      _buildControlsTab(context, data),
+                    ],
+                  ),
+                ),
               ],
             );
           },
@@ -237,9 +503,42 @@ class ChildDetailScreen extends StatelessWidget {
             // BEDTIME CONTROLS
             _buildBedtimeCard(context, childData),
 
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                "App Limits & Blocking",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
             // APP LIST
             if (apps.isEmpty)
-              const Expanded(child: Center(child: Text('No apps synced yet.')))
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Syncing apps from child device...',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'This may take 1-2 minutes.',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              )
             else
               Expanded(
                 child: GridView.builder(
@@ -269,166 +568,126 @@ class ChildDetailScreen extends StatelessWidget {
                     final limitMins = appLimits[pkg] as int?;
 
                     return GestureDetector(
-                      onTap: () =>
-                          _showLimitPickerDialog(context, pkg, name, limitMins),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isBlocked
-                                  ? Colors.red.withOpacity(0.1)
-                                  : Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isBlocked
-                                    ? Colors.red.withOpacity(0.3)
-                                    : Colors.white.withOpacity(0.2),
-                                width: 1.5,
-                              ),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withOpacity(0.1),
-                                  Colors.white.withOpacity(0.05),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                      onTap: () => _showLimitPickerDialog(
+                        context,
+                        pkg,
+                        _getAppName(pkg, name),
+                        limitMins,
+                      ),
+                      child: AnimatedContainer(
+                        duration: 200.ms,
+                        decoration: BoxDecoration(
+                          color: isBlocked ? Colors.red.shade50 : Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isBlocked
+                                ? Colors.red.shade200
+                                : Colors.grey.shade200,
+                            width: isBlocked ? 2 : 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
-                            child: Stack(
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Stack(
                               alignment: Alignment.topRight,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: isBlocked
-                                                      ? Colors.red.withOpacity(
-                                                          0.2,
-                                                        )
-                                                      : Colors.blue.withOpacity(
-                                                          0.2,
-                                                        ),
-                                                  blurRadius: 12,
-                                                  spreadRadius: 2,
-                                                ),
-                                              ],
-                                            ),
-                                            child: iconBase64 != null
-                                                ? ClipOval(
-                                                    child: Image.memory(
-                                                      base64Decode(iconBase64),
-                                                      width: 48,
-                                                      height: 48,
-                                                      fit: BoxFit.cover,
-                                                      gaplessPlayback: true,
-                                                    ),
-                                                  )
-                                                : CircleAvatar(
-                                                    radius: 24,
-                                                    backgroundColor:
-                                                        Colors.grey[200],
-                                                    child: Icon(
-                                                      Icons.android,
-                                                      color: Colors.grey[400],
-                                                      size: 28,
-                                                    ),
-                                                  ),
-                                          )
-                                          .animate(target: isBlocked ? 1 : 0)
-                                          .scale(end: const Offset(0.9, 0.9))
-                                          .desaturate(end: 1),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        name,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      if (limitMins != null)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.orange.withOpacity(
-                                              0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.orange.withOpacity(
-                                                0.5,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            '${limitMins}m Limit',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.deepOrange,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isBlocked
+                                        ? Colors.white
+                                        : Colors.grey.shade50,
+                                    shape: BoxShape.circle,
                                   ),
+                                  child: isBlocked
+                                      ? ColorFiltered(
+                                          colorFilter: const ColorFilter.mode(
+                                            Colors.grey,
+                                            BlendMode.saturation,
+                                          ),
+                                          child: _getAppIcon(pkg, iconBase64),
+                                        )
+                                      : _getAppIcon(pkg, iconBase64),
                                 ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Transform.scale(
-                                    scale: 0.6,
-                                    child: Switch(
-                                      value: !isBlocked, // ON = Allowed
-                                      activeColor: Colors.greenAccent,
-                                      activeTrackColor: Colors.green
-                                          .withOpacity(0.3),
-                                      inactiveThumbColor: Colors.redAccent,
-                                      inactiveTrackColor: Colors.red
-                                          .withOpacity(0.3),
-                                      onChanged: (allowed) {
-                                        final ref = FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(parentUid)
-                                            .collection('children')
-                                            .doc(childId);
-
-                                        if (allowed) {
-                                          ref.update({
-                                            'blocked_apps':
-                                                FieldValue.arrayRemove([pkg]),
-                                          });
-                                        } else {
-                                          ref.update({
-                                            'blocked_apps':
-                                                FieldValue.arrayUnion([pkg]),
-                                          });
-                                        }
-                                      },
+                                if (limitMins != null)
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.timer,
+                                      size: 12,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                ),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              child: Text(
+                                _getAppName(pkg, name),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isBlocked
+                                      ? Colors.red
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Switch(
+                              value: !isBlocked,
+                              activeColor: Colors.green,
+                              inactiveTrackColor: Colors.red.shade100,
+                              inactiveThumbColor: Colors.red,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              onChanged: (allowed) {
+                                final ref = FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(parentUid)
+                                    .collection('children')
+                                    .doc(childId);
+
+                                if (allowed) {
+                                  ref.update({
+                                    'blocked_apps': FieldValue.arrayRemove([
+                                      pkg,
+                                    ]),
+                                  });
+                                } else {
+                                  ref.update({
+                                    'blocked_apps': FieldValue.arrayUnion([
+                                      pkg,
+                                    ]),
+                                  });
+                                }
+                              },
+                            ).scale(scale: 0.8),
+                          ],
                         ),
-                      ).animate(delay: (30 * index).ms).scale().fade(),
+                      ),
                     );
                   },
                 ),
@@ -567,7 +826,7 @@ class ChildDetailScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.white30),
             ),
@@ -678,10 +937,15 @@ class ChildDetailScreen extends StatelessWidget {
           .limit(7)
           .get(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
+        if (!snapshot.hasData) {
+          return const SizedBox(
+            height: 200,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
 
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty) return const SizedBox.shrink();
+        // if (docs.isEmpty) return const SizedBox.shrink(); // Disabled to show empty chart
 
         // Prepare data: Map<DateStr, Mins>
         final Map<String, int> dailyMins = {};
@@ -713,7 +977,7 @@ class ChildDetailScreen extends StatelessWidget {
                   color: i == 6
                       ? Colors
                             .amber // Today
-                      : Colors.blueAccent.withOpacity(0.7),
+                      : Colors.blueAccent.withValues(alpha: 0.7),
                   width: 16,
                   borderRadius: BorderRadius.circular(4),
                   backDrawRodData: BackgroundBarChartRodData(
@@ -893,50 +1157,55 @@ class ChildDetailScreen extends StatelessWidget {
                       final name = appData?['name'] ?? pkg.split('.').last;
                       final iconBase64 = appData?['icon'] as String?;
 
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: iconBase64 != null
-                              ? Image.memory(
-                                  base64Decode(iconBase64),
-                                  width: 24,
-                                  height: 24,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.android,
-                                    color: Colors.blueAccent,
-                                    size: 20,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.android,
-                                  color: Colors.blueAccent,
-                                  size: 20,
-                                ),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                        title: Text(
-                          name,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                        ),
-                        subtitle: Text(
-                          pkg,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: _getAppIcon(pkg, iconBase64),
                           ),
-                        ),
-                        trailing: Text(
-                          '$minutes min',
-                          style: GoogleFonts.robotoMono(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
+                          title: Text(
+                            _getAppName(pkg, name),
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '$minutes min',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo.shade700,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -945,7 +1214,40 @@ class ChildDetailScreen extends StatelessWidget {
                 },
               )
             else
-              const Text('No usage data yet.'),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.smartphone_rounded,
+                          size: 32,
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No activity recorded yet today",
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Usage stats will appear here shortly.",
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

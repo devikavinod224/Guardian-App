@@ -32,7 +32,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 4,
-        shadowColor: const Color(0xFF6C63FF).withOpacity(0.4),
+        shadowColor: const Color(0xFF6C63FF).withValues(alpha: 0.4),
         backgroundColor: const Color(0xFF6C63FF),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

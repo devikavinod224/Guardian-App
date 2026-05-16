@@ -142,7 +142,7 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
               color: Colors.red,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.4),
+                  color: Colors.red.withValues(alpha: 0.4),
                   blurRadius: 15,
                   spreadRadius: 4,
                 ),

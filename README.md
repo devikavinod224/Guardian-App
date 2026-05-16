@@ -42,6 +42,23 @@ Guardian is a next-generation parental control application built with Flutter, d
 
 ---
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/Screenshot 2026-02-18 005347.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005357.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005409.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005426.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005436.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005459.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005535.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005556.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005608.png" width="30%" />
+  <img src="screenshots/Screenshot 2026-02-18 005627.png" width="30%" />
+</p>
+
+---
+
 ## 🛠️ Tech Stack & Architecture
 
 This project uses a robust integration of Flutter and Native Android code to achieve system-level control.

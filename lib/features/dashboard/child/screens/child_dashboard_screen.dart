@@ -249,12 +249,9 @@ class _ChildDashboardScreenState extends State<ChildDashboardScreen> {
         debugPrint("SOS Location Error: $e");
       }
 
-      // Upload Alert
       await FirebaseFirestore.instance
           .collection('users')
           .doc(parentUid)
-          .collection('children')
-          .doc(childId)
           .collection('alerts')
           .add({
             'type': 'SOS',

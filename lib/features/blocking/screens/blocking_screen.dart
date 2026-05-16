@@ -105,8 +105,6 @@ class _BlockingScreenState extends State<BlockingScreen> {
           await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
-              .collection('children')
-              .doc(childId)
               .collection('requests')
               .add({
                 'packageName': originalPkg,

@@ -195,7 +195,7 @@ void onStart(ServiceInstance service) async {
           final focusEnd = DateTime.parse(focusEndIso);
           if (focusEnd.isAfter(DateTime.now())) {
             // Check if they left the app
-            if (currentApp != 'com.devika.guardian') {
+            if (currentApp != 'com.anand.guardian') {
               shouldBlock = true;
               blockReason = "focus";
               // Mark as violated!
@@ -312,8 +312,6 @@ void onStart(ServiceInstance service) async {
                   FirebaseFirestore.instance
                       .collection('users')
                       .doc(user.uid)
-                      .collection('children')
-                      .doc(childId)
                       .collection('alerts')
                       .add({
                         'type': 'TimeExceeded',
@@ -330,7 +328,7 @@ void onStart(ServiceInstance service) async {
 
         if (shouldBlock) {
           // SKIP locking if WE are the top app
-          if (currentApp == 'com.devika.guardian') return;
+          if (currentApp == 'com.anand.guardian') return;
 
           // Set Flag
           await prefs.setBool('is_blocking_active', true);
@@ -338,13 +336,27 @@ void onStart(ServiceInstance service) async {
           await prefs.setString('blocking_reason', blockReason); // Pass reason
 
           // 3. Launch Blocking Screen
+          // First, forcibly minimize the current app by going Home
+          final goHomeIntent = AndroidIntent(
+            action: 'android.intent.action.MAIN',
+            category: 'android.intent.category.HOME',
+            flags: [Flag.FLAG_ACTIVITY_NEW_TASK],
+          );
+          await goHomeIntent.launch();
+
+          // Quick delay to let the system go home before popping our screen
+          await Future.delayed(const Duration(milliseconds: 300));
+
+          // Then launch our blocking screen explicitly over it
           final intent = AndroidIntent(
             action: 'android.intent.action.MAIN',
-            package: 'com.devika.guardian',
-            componentName: 'com.devika.guardian.MainActivity',
+            category: 'android.intent.category.LAUNCHER',
+            package: 'com.anand.guardian',
+            componentName: 'com.anand.guardian.MainActivity',
             flags: [
               Flag.FLAG_ACTIVITY_NEW_TASK,
-              Flag.FLAG_ACTIVITY_REORDER_TO_FRONT,
+              Flag.FLAG_ACTIVITY_CLEAR_TOP,
+              Flag.FLAG_ACTIVITY_SINGLE_TOP,
             ],
             // We can pass data to open specific route
             arguments: {'route': '/blocking'},
@@ -352,7 +364,7 @@ void onStart(ServiceInstance service) async {
           await intent.launch();
         } else {
           // If we are in a safe app (and it's not us), clear the flag
-          if (currentApp != 'com.devika.guardian') {
+          if (currentApp != 'com.anand.guardian') {
             await prefs.setBool('is_blocking_active', false);
             await prefs.remove('current_blocked_app');
             await prefs.remove('blocking_reason');
@@ -555,13 +567,12 @@ Future<void> _performMonitoring(ServiceInstance service) async {
             FirebaseFirestore.instance
                 .collection('users')
                 .doc(parentUid)
-                .collection('children')
-                .doc(deviceId)
                 .collection('alerts')
                 .add({
                   'type': 'SafeZone',
                   'timestamp': FieldValue.serverTimestamp(),
                   'parentId': parentUid,
+                  'childId': deviceId,
                   'message': 'Child has left the Safe Zone!',
                   'location': GeoPoint(position.latitude, position.longitude),
                 });

@@ -52,6 +52,8 @@ class _ChildLoginScreenState extends State<ChildLoginScreen> {
       await prefs.setString('parent_uid', pUid);
       await prefs.setBool('is_child', true);
       await prefs.setString('child_id', deviceId);
+      await prefs.setBool('is_logged_in', true);
+      await prefs.setString('user_role', 'child');
 
       if (mounted) {
         ScaffoldMessenger.of(

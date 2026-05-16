@@ -43,12 +43,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
-                      .collectionGroup('requests')
-                      .where(
-                        'parentId',
-                        isEqualTo: context.read<AuthService>().currentUser?.uid,
-                      )
-                      .where('status', isEqualTo: 'pending')
+                      .collection('users')
+                      .doc(context.read<AuthService>().currentUser?.uid)
+                      .collection('requests')
                       .orderBy('timestamp', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -61,7 +58,14 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     if (!snapshot.hasData)
                       return const Center(child: CircularProgressIndicator());
 
-                    final reqs = snapshot.data!.docs;
+                    final allDocs = snapshot.data!.docs;
+                    final reqs = allDocs
+                        .where(
+                          (d) =>
+                              (d.data() as Map<String, dynamic>)['status'] ==
+                              'pending',
+                        )
+                        .toList();
                     if (reqs.isEmpty)
                       return const Center(child: Text('No pending requests.'));
 
@@ -140,16 +144,21 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       final user = context.read<AuthService>().currentUser;
       if (user != null) {
         FirebaseFirestore.instance
-            .collectionGroup('alerts')
-            .where('parentId', isEqualTo: user.uid)
-            .where('type', isEqualTo: 'SOS')
+            .collection('users')
+            .doc(user.uid)
+            .collection('alerts')
             .orderBy('timestamp', descending: true)
-            .limit(1)
+            .limit(10)
             .snapshots()
             .listen((snapshot) {
-              if (snapshot.docs.isNotEmpty) {
-                final doc = snapshot.docs.first;
-                final data = doc.data();
+              final sosDocs = snapshot.docs
+                  .where(
+                    (d) => (d.data() as Map<String, dynamic>)['type'] == 'SOS',
+                  )
+                  .toList();
+              if (sosDocs.isNotEmpty) {
+                final doc = sosDocs.first;
+                final data = doc.data() as Map<String, dynamic>;
                 final timestamp = data['timestamp'] as Timestamp?;
 
                 if (timestamp != null) {
@@ -310,15 +319,19 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         actions: [
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
-                .collectionGroup('requests')
-                .where(
-                  'parentId',
-                  isEqualTo: context.read<AuthService>().currentUser?.uid,
-                )
-                .where('status', isEqualTo: 'pending')
+                .collection('users')
+                .doc(context.read<AuthService>().currentUser?.uid)
+                .collection('requests')
                 .snapshots(),
             builder: (context, snapshot) {
-              final count = snapshot.data?.docs.length ?? 0;
+              final docs = snapshot.data?.docs ?? [];
+              final count = docs
+                  .where(
+                    (d) =>
+                        (d.data() as Map<String, dynamic>)['status'] ==
+                        'pending',
+                  )
+                  .length;
               return IconButton(
                 onPressed: () => _showRequestsSheet(context),
                 icon: Badge(

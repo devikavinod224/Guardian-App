@@ -380,7 +380,10 @@ Future<void> _performMonitoring(ServiceInstance service) async {
     // 4. Sync Installed Apps (Smart Sync)
     try {
       // Check for changes (optimization)
-      List<AppInfo> apps = await InstalledApps.getInstalledApps(false, true);
+      List<AppInfo> apps = await InstalledApps.getInstalledApps(
+        withIcon: false,
+        excludeSystemApps: true,
+      );
       apps.sort((a, b) => a.packageName.compareTo(b.packageName));
       final currentFingerprint = apps.map((e) => e.packageName).join(',');
       final savedFingerprint = prefs.getString('apps_fingerprint');
@@ -389,7 +392,10 @@ Future<void> _performMonitoring(ServiceInstance service) async {
         debugPrint("Guardian: App list changed, syncing...");
 
         // Fetch full details with icons
-        final appsWithIcons = await InstalledApps.getInstalledApps(true, true);
+        final appsWithIcons = await InstalledApps.getInstalledApps(
+          withIcon: true,
+          excludeSystemApps: true,
+        );
         final batch = FirebaseFirestore.instance.batch();
         final appsCollection = deviceRef.collection('apps');
 

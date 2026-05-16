@@ -433,6 +433,8 @@ Future<void> _performMonitoring(ServiceInstance service) async {
 
     // 4. Sync Installed Apps (Smart Sync)
     try {
+      final appsCollection = deviceRef.collection('apps');
+
       // Check for changes (optimization)
       List<AppInfo> apps = await InstalledApps.getInstalledApps(
         withIcon: false,

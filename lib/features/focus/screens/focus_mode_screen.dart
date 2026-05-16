@@ -85,46 +85,63 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
   Future<void> _completeFocus() async {
     _timer?.cancel();
     final prefs = await SharedPreferences.getInstance();
+    final wasViolated = prefs.getBool('focus_violated') ?? false;
     await prefs.remove('focus_end_time');
+    await prefs.remove('focus_violated');
 
-    // Grant Reward
-    final bonus = (_targetMinutes / 3)
-        .round(); // Reward: 1/3 of focus time (e.g. 30 -> 10)
-
-    // Optimistic UI
     setState(() {
       _isFocusing = false;
     });
 
     if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text("Session Complete! 🎉"),
-          content: Text("You earned $bonus minutes of bonus screen time!"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Awesome!"),
+      if (wasViolated) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Session Interrupted ⚠️"),
+            content: const Text(
+              "You left the app during your focus session, so no bonus time was earned this time. Try again!",
             ),
-          ],
-        ),
-      );
-    }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("I'll try harder"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // Grant Reward
+        final bonus = (_targetMinutes / 3).round();
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Session Complete! 🎉"),
+            content: Text("You earned $bonus minutes of bonus screen time!"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Awesome!"),
+              ),
+            ],
+          ),
+        );
 
-    // Sync Reward to Firestore
-    try {
-      final ref = FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.parentUid)
-          .collection('children')
-          .doc(widget.childId);
+        // Sync Reward to Firestore
+        try {
+          final ref = FirebaseFirestore.instance
+              .collection('users')
+              .doc(widget.parentUid)
+              .collection('children')
+              .doc(widget.childId);
 
-      // Atomic increment
-      await ref.update({'bonus_time': FieldValue.increment(bonus)});
-    } catch (e) {
-      debugPrint("Error granting reward: $e");
+          await ref.update({'bonus_time': FieldValue.increment(bonus)});
+        } catch (e) {
+          debugPrint("Error granting reward: $e");
+        }
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../auth/services/auth_service.dart';
 import '../services/pairing_service.dart';
 
@@ -190,14 +191,33 @@ class _PairingCodeScreenState extends State<PairingCodeScreen>
                               color: Colors.white.withOpacity(0.3),
                             ),
                           ),
-                          child: Text(
-                            _code!,
-                            style: GoogleFonts.poppins(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 8,
-                            ),
+                          child: Column(
+                            children: [
+                              QrImageView(
+                                data: _code!,
+                                version: QrVersions.auto,
+                                size: 180,
+                                gapless: false,
+                                eyeStyle: const QrEyeStyle(
+                                  eyeShape: QrEyeShape.square,
+                                  color: Colors.white,
+                                ),
+                                dataModuleStyle: const QrDataModuleStyle(
+                                  dataModuleShape: QrDataModuleShape.square,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _code!,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 8,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 32),

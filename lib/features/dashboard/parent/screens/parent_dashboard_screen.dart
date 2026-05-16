@@ -429,12 +429,18 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Last active: ${_formatTimestamp(data['last_active'])}',
-                              style: GoogleFonts.poppins(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
+                            Row(
+                              children: [
+                                _buildStatusIndicator(data['last_active']),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Last active: ${_formatTimestamp(data['last_active'])}',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                             if (!isSafe)
                               Padding(
@@ -630,6 +636,34 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusIndicator(dynamic timestamp) {
+    bool isOnline = false;
+    if (timestamp is Timestamp) {
+      final now = DateTime.now();
+      final date = timestamp.toDate();
+      final diff = now.difference(date);
+      if (diff.inMinutes < 5) isOnline = true;
+    }
+
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isOnline ? Colors.green : Colors.grey,
+        boxShadow: isOnline
+            ? [
+                BoxShadow(
+                  color: Colors.green.withOpacity(0.5),
+                  blurRadius: 4,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
       ),
     );
   }

@@ -191,12 +191,17 @@ void onStart(ServiceInstance service) async {
 
         // Constraint 0: Focus Mode (Highest Priority - Voluntary)
         final focusEndIso = prefs.getString('focus_end_time');
-        if (!shouldBlock && focusEndIso != null) {
+        if (focusEndIso != null) {
           final focusEnd = DateTime.parse(focusEndIso);
           if (focusEnd.isAfter(DateTime.now())) {
-            shouldBlock = true;
-            blockReason = "focus";
-            debugPrint("BLOCKING: Focus Mode Active!");
+            // Check if they left the app
+            if (currentApp != 'com.devika.guardian') {
+              shouldBlock = true;
+              blockReason = "focus";
+              // Mark as violated!
+              await prefs.setBool('focus_violated', true);
+              debugPrint("BLOCKING: Focus Mode Active & Violated!");
+            }
           } else {
             // Cleanup expired focus
             prefs.remove('focus_end_time');

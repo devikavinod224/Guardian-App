@@ -656,35 +656,38 @@ class ChildDetailScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Switch(
-                              value: !isBlocked,
-                              activeColor: Colors.green,
-                              inactiveTrackColor: Colors.red.shade100,
-                              inactiveThumbColor: Colors.red,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              onChanged: (allowed) {
-                                final ref = FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(parentUid)
-                                    .collection('children')
-                                    .doc(childId);
+                            Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: !isBlocked,
+                                activeColor: Colors.green,
+                                inactiveTrackColor: Colors.red.shade100,
+                                inactiveThumbColor: Colors.red,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onChanged: (allowed) {
+                                  final ref = FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(parentUid)
+                                      .collection('children')
+                                      .doc(childId);
 
-                                if (allowed) {
-                                  ref.update({
-                                    'blocked_apps': FieldValue.arrayRemove([
-                                      pkg,
-                                    ]),
-                                  });
-                                } else {
-                                  ref.update({
-                                    'blocked_apps': FieldValue.arrayUnion([
-                                      pkg,
-                                    ]),
-                                  });
-                                }
-                              },
-                            ).scale(scale: 0.8),
+                                  if (allowed) {
+                                    ref.update({
+                                      'blocked_apps': FieldValue.arrayRemove([
+                                        pkg,
+                                      ]),
+                                    });
+                                  } else {
+                                    ref.update({
+                                      'blocked_apps': FieldValue.arrayUnion([
+                                        pkg,
+                                      ]),
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
                           ],
                         ),
                       ),

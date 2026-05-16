@@ -568,11 +568,10 @@ class ChildDetailScreen extends StatelessWidget {
                     final limitMins = appLimits[pkg] as int?;
 
                     return GestureDetector(
-                      onTap: () => _showLimitPickerDialog(
+                      onTap: () => _showLimitDialog(
                         context,
                         pkg,
                         _getAppName(pkg, name),
-                        limitMins,
                       ),
                       child: AnimatedContainer(
                         duration: 200.ms,
@@ -596,9 +595,28 @@ class ChildDetailScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Stack(
-                              alignment: Alignment.topRight,
-                              children: [
+                            GestureDetector(
+                              onTap: () {
+                                if (isBlocked) {
+                                  // Unblock
+                                  final ref = FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(parentUid)
+                                      .collection('children')
+                                      .doc(childId);
+
+                                  ref.update({
+                                    'blocked_apps': FieldValue.arrayRemove([
+                                      pkg,
+                                    ]),
+                                  });
+                                } else {
+                                  _showLimitDialog(context, pkg, name);
+                                }
+                              },
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
@@ -1253,6 +1271,152 @@ class ChildDetailScreen extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showLimitDialog(BuildContext context, String pkg, String appName) {
+    int selectedHours = 1;
+    int selectedMinutes = 0;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text("Manage $appName"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.block, color: Colors.red),
+                  title: const Text("Block App"),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    final ref = FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(parentUid)
+                        .collection('children')
+                        .doc(childId);
+
+                    ref.update({
+                      'blocked_apps': FieldValue.arrayUnion([pkg]),
+                      'app_limits.$pkg': FieldValue.delete(),
+                    });
+                    
+                    if (mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Blocked $appName")),
+                      );
+                    }
+                  },
+                ),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  "Set Daily Limit",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Hours Picker
+                    Column(
+                      children: [
+                        Text("Hours", style: GoogleFonts.poppins(fontSize: 12)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButton<int>(
+                            value: selectedHours,
+                            underline: const SizedBox(),
+                            items: List.generate(12, (index) => index).map((h) {
+                              return DropdownMenuItem(
+                                value: h,
+                                child: Text("$h"),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              setDialogState(() => selectedHours = val!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    // Minutes Picker
+                    Column(
+                      children: [
+                        Text(
+                          "Minutes",
+                          style: GoogleFonts.poppins(fontSize: 12),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: DropdownButton<int>(
+                            value: selectedMinutes,
+                            underline: const SizedBox(),
+                            items: [0, 15, 30, 45].map((m) {
+                              return DropdownMenuItem(
+                                value: m,
+                                child: Text("$m".padLeft(2, '0')),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              setDialogState(() => selectedMinutes = val!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    final totalMins = (selectedHours * 60) + selectedMinutes;
+                    final ref = FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(parentUid)
+                        .collection('children')
+                        .doc(childId);
+
+                    if (totalMins > 0) {
+                      ref.update({
+                        'app_limits.$pkg': totalMins,
+                        'blocked_apps': FieldValue.arrayRemove([pkg]),
+                      });
+                    } else {
+                       ref.update({
+                        'app_limits.$pkg': FieldValue.delete(),
+                      });
+                    }
+
+                    Navigator.pop(ctx);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Limit set to ${selectedHours}h ${selectedMinutes}m for $appName",
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text("Save Limit"),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

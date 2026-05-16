@@ -21,7 +21,6 @@ class _ChildPermissionsScreenState extends State<ChildPermissionsScreen>
   bool _locationGranted = false;
   bool _usageStatsGranted = false;
   bool _overlayGranted = false;
-  bool _batteryIgnored = false;
   bool _notificationGranted = false;
   bool _adminGranted = false;
 
@@ -62,9 +61,6 @@ class _ChildPermissionsScreenState extends State<ChildPermissionsScreen>
     // 3. Overlay
     final overlay = await Permission.systemAlertWindow.status.isGranted;
 
-    // 4. Battery
-    final batt = await Permission.ignoreBatteryOptimizations.status.isGranted;
-
     // 5. Notification
     final notif = await Permission.notification.status.isGranted;
 
@@ -73,7 +69,6 @@ class _ChildPermissionsScreenState extends State<ChildPermissionsScreen>
         _locationGranted = loc;
         _usageStatsGranted = usage;
         _overlayGranted = overlay;
-        _batteryIgnored = batt;
         _notificationGranted = notif;
       });
     }
@@ -96,11 +91,6 @@ class _ChildPermissionsScreenState extends State<ChildPermissionsScreen>
 
   Future<void> _requestOverlay() async {
     await Permission.systemAlertWindow.request();
-    _checkPermissions();
-  }
-
-  Future<void> _requestBattery() async {
-    await Permission.ignoreBatteryOptimizations.request();
     _checkPermissions();
   }
 
@@ -148,7 +138,6 @@ class _ChildPermissionsScreenState extends State<ChildPermissionsScreen>
       _locationGranted &&
       _usageStatsGranted &&
       _overlayGranted &&
-      _batteryIgnored &&
       _notificationGranted;
 
   @override
@@ -222,13 +211,6 @@ class _ChildPermissionsScreenState extends State<ChildPermissionsScreen>
                     icon: Icons.layers_outlined,
                     isGranted: _overlayGranted,
                     onTap: _requestOverlay,
-                  ),
-                  _buildPermissionItem(
-                    key: 'battery',
-                    title: "Battery",
-                    icon: Icons.battery_charging_full,
-                    isGranted: _batteryIgnored,
-                    onTap: _requestBattery,
                   ),
                   _buildPermissionItem(
                     key: 'notif',

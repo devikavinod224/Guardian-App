@@ -113,4 +113,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 Built with ❤️ using **Flutter**.
 
-**Made by Devika Vinod**
+**Made by Devika Vinod,Navami S Raj,Richu Maria Sijee,Tresa Maria Roy**
